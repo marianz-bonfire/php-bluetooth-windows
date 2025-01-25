@@ -14,13 +14,13 @@ if (!isset($request['printer']) || !isset($request['path'])) {
 $printer = escapeshellarg($request['printer']);
 $path = escapeshellarg($request['path']);
 
-$command = "tarsier_bluetooth_agent.exe --print=$printer --path=$path";
-// Execute the Python script
 $output = [];
-//exec("tarsier_bluetooth_agent.exe --print $printer $path", $output, $return_var);
+
+// Call the bluetooth agent
+$command = "tarsier_bluetooth_agent.exe --print=$printer --path=$path";
 exec($command, $output, $return_var);
 
-// Parse the output from the Python script
+// Parse the output from the bluetooth agent
 $response = json_decode(implode("\n", $output), true);
 
 if ($response && isset($response['status'])) {

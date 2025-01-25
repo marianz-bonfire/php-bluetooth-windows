@@ -1,8 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
-// Call the Python script
 $output = [];
+
+// Call the bluetooth agent
 exec("tarsier_bluetooth_agent.exe --list", $output);
 
 $response = json_decode(implode("\n", $output), true);
