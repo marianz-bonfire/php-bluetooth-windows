@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetooth Printer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button, select, textarea {
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        button[disabled] {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p align="center">  
+            <img height="260" src="https://raw.githubusercontent.com/marianz-bonfire/php-bluetooth-windows/master/php-bluetooth.png">
+            <h1 align="center">Bluetooth Printer Interface</h1>
+        </p>
+        <!-- Scan Button -->
+        <button id="scanBtn">Scan Bluetooth Devices</button>
+
+        <!-- Combobox for Bluetooth Devices -->
+        <select id="bluetoothDevices">
+            <option value="" disabled selected>Select a Bluetooth device</option>
+        </select>
+
+        <!-- Text Area for Content to Print -->
+        <textarea id="printContent" rows="5" placeholder="Enter text to print..."></textarea>
+
+        <!-- Print Button -->
+        <button id="printBtn">Print</button>
+    </div>
+
+    <script>
+        const scanBtn = document.getElementById('scanBtn');
+        const bluetoothDevices = document.getElementById('bluetoothDevices');
+        const printBtn = document.getElementById('printBtn');
+        const printContent = document.getElementById('printContent');
+
+        // Scan Bluetooth Devices
+        scanBtn.addEventListener('click', async () => {
+            scanBtn.disabled = true;
+            scanBtn.textContent = 'Scanning...';
+
+            try {
+                const response = await fetch('/api/scan.php'); // Replace with your PHP API endpoint
+                if (!response.ok) {
+                    throw new Error('Failed to scan Bluetooth devices');
+                }
+
+                const devices = await response.json();
+                bluetoothDevices.innerHTML = '<option value="" disabled selected>Select a Bluetooth device</option>';
+
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.name;
+                    option.textContent = `${device.name} (${device.address})`;
+                    bluetoothDevices.appendChild(option);
+                });
+
+                alert('Bluetooth devices scanned successfully!');
+            } catch (error) {
+                console.error(error);
+                alert('Error scanning Bluetooth devices. Please try again.');
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.textContent = 'Scan Bluetooth Devices';
+            }
+        });
+
+        // Print Content
+        printBtn.addEventListener('click', async () => {
+            const selectedDevice = bluetoothDevices.value;
+            const content = printContent.value;
+
+            if (!selectedDevice) {
+                alert('Please select a Bluetooth device.');
+                return;
+            }
+
+            if (!content.trim()) {
+                alert('Please enter text to print.');
+                return;
+            }
+
+            printBtn.disabled = true;
+            printBtn.textContent = 'Printing...';
+
+            try {
+                // Create a temporary file (replace with your actual implementation)
+                const tempFileResponse = await fetch('/api/create.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content }),
+                });
+
+                if (!tempFileResponse.ok) {
+                    throw new Error('Failed to create temp file');
+                }
+
+                const { tempFilePath } = await tempFileResponse.json();
+
+                // Call the print API
+                const printResponse = await fetch('/api/print.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        printer: selectedDevice,
+                        path: tempFilePath,
+                    }),
+                });
+
+                if (!printResponse.ok) {
+                    throw new Error('Failed to print');
+                }
+
+                alert('Content sent to the printer successfully!');
+            } catch (error) {
+                console.error(error);
+                alert('Error printing content. Please try again.');
+            } finally {
+                printBtn.disabled = false;
+                printBtn.textContent = 'Print';
+            }
+        });
+    </script>
+</body>
+</html>
