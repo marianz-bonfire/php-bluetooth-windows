@@ -42,19 +42,22 @@
         <!-- Text Area for Content to Print -->
         <textarea id="printContent" rows="5" placeholder="Enter text to print..."></textarea>
 
+        <input type="checkbox" id="checkEscPosCommands" name="checkEscPosCommands">
+        <label for="checkEscPosCommands">Construct ESC/POS commands</label>
         <!-- Print Button -->
-        <button id="printBtn">Print</button>
+        <button id="printBtn">Send</button>
     </div>
 
     <script>
         const scanBtn = document.getElementById('scanBtn');
         const bluetoothDevices = document.getElementById('bluetoothDevices');
+        const constructEscPosCheck = document.getElementById('checkEscPosCommands');
         const printBtn = document.getElementById('printBtn');
         const printContent = document.getElementById('printContent');
 
         // Scan Bluetooth Devices
         scanBtn.addEventListener('click', async () => {
-            scanBtn.disabled = true;
+            setState(true);
             scanBtn.textContent = 'Scanning...';
 
             try {
@@ -78,7 +81,7 @@
                 console.error(error);
                 alert('Error scanning Bluetooth devices. Please try again.');
             } finally {
-                scanBtn.disabled = false;
+                setState(false);
                 scanBtn.textContent = 'Scan Bluetooth Devices';
             }
         });
@@ -87,6 +90,7 @@
         printBtn.addEventListener('click', async () => {
             const selectedDevice = bluetoothDevices.value;
             const content = printContent.value;
+            const constructEscPos = constructEscPosCheck.checked;
 
             if (!selectedDevice) {
                 alert('Please select a Bluetooth device.');
@@ -98,7 +102,7 @@
                 return;
             }
 
-            printBtn.disabled = true;
+            setState(true);
             printBtn.textContent = 'Printing...';
 
             try {
@@ -108,7 +112,10 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ content }),
+                    body: JSON.stringify({
+                        content: content,
+                        construct_esc: constructEscPos,
+                    }),
                 });
 
                 if (!tempFileResponse.ok) {
@@ -138,10 +145,26 @@
                 console.error(error);
                 alert('Error printing content. Please try again.');
             } finally {
-                printBtn.disabled = false;
+                setState(false);
                 printBtn.textContent = 'Print';
             }
         });
+
+        constructEscPosCheck.addEventListener('change', function() {
+            if (this.checked) {
+                printBtn.textContent = "Print";
+            } else {
+                printBtn.textContent = "Send";
+            }
+        });
+
+        function setState(state) {
+            scanBtn.disabled =
+            bluetoothDevices.disabled =
+            printContent.disabled = 
+            constructEscPosCheck.disabled = 
+            printBtn.disabled = state;
+        }
     </script>
 </body>
 </html>

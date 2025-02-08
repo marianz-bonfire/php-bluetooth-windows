@@ -25,6 +25,7 @@ $response = json_decode(implode("\n", $output), true);
 
 if ($response && isset($response['status'])) {
     if ($response['status'] === 'success') {
+        unlink($path); // Delete file if success
         echo json_encode(['message' => $response['message']]);
     } else {
         http_response_code(500);
